@@ -6,22 +6,22 @@ class ViewController: UIViewController {
 
     var audioEngine: AudioEngine!
     var microphone: AudioEngine.InputNode!
-    var amplitudeTracker: AmplitudeTap!
-    var waveformLayer: CAShapeLayer!
-    var timer: Timer!
+    var bandPassFilter: BandPassFilter!
+    var dynamicsProcessor: DynamicsProcessor!
+    var amplitudeTap: AmplitudeTap!
+    var mixer: Mixer!
+    var isEngineRunning = false // Track the audio engine state
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Initialize AudioEngine
         audioEngine = AudioEngine()
-
-        // Set up audio session and request permissions
         configureAudioSession()
         requestMicrophonePermission()
+        
+//        Settings.audioInputEnabled = true
+//        Settings.channelCount = 1 // Mono
+//        Settings.bufferLength = .medium // Adjust buffer length if needed
 
-        // Set up waveform visualization
-        setupWaveformLayer()
     }
 
     func configureAudioSession() {
@@ -30,35 +30,38 @@ class ViewController: UIViewController {
             try audioSession.setCategory(.playAndRecord, options: [.defaultToSpeaker, .allowBluetooth])
             try audioSession.setMode(.default)
             try audioSession.setActive(true)
+            print("Audio session configured successfully.")
         } catch {
-            print("Failed to configure audio session: \(error)")
+            print("Failed to configure audio session: \(error.localizedDescription)")
         }
     }
 
     func requestMicrophonePermission() {
-        AVAudioSession.sharedInstance().requestRecordPermission { granted in
-            DispatchQueue.main.async {
-                if !granted {
-                    let alert = UIAlertController(
-                        title: "Microphone Access Denied",
-                        message: "Please enable microphone access in Settings to use this feature.",
-                        preferredStyle: .alert
-                    )
-                    alert.addAction(UIAlertAction(title: "OK", style: .default))
-                    self.present(alert, animated: true)
-                }
+        if #available(iOS 17.0, *) {
+            AVAudioApplication.requestRecordPermission { granted in
+                self.handleMicrophonePermission(granted)
+            }
+        } else {
+            AVAudioSession.sharedInstance().requestRecordPermission { granted in
+                self.handleMicrophonePermission(granted)
             }
         }
     }
 
-    func setupWaveformLayer() {
-        waveformLayer = CAShapeLayer()
-        waveformLayer.frame = CGRect(x: 0, y: 200, width: view.bounds.width, height: 100)
-        waveformLayer.backgroundColor = UIColor.black.cgColor
-        waveformLayer.strokeColor = UIColor.green.cgColor
-        waveformLayer.lineWidth = 2.0
-        waveformLayer.fillColor = UIColor.clear.cgColor
-        view.layer.addSublayer(waveformLayer)
+    func handleMicrophonePermission(_ granted: Bool) {
+        DispatchQueue.main.async {
+            if granted {
+                print("Microphone access granted.")
+            } else {
+                let alert = UIAlertController(
+                    title: "Microphone Access Denied",
+                    message: "Please enable microphone access in Settings to use this feature.",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                self.present(alert, animated: true)
+            }
+        }
     }
 
     @IBAction func listenTapped(_ sender: UIButton) {
@@ -66,48 +69,57 @@ class ViewController: UIViewController {
     }
 
     func startListening() {
+        guard !isEngineRunning else {
+            print("Audio engine is already running.")
+            return
+        }
+
         do {
-            guard let input = audioEngine.input else { return }
+            guard let input = audioEngine.input else {
+                print("Microphone not available.")
+                return
+            }
             microphone = input
 
-            // Set up amplitude tracking
-            amplitudeTracker = AmplitudeTap(microphone) { amplitude in
-                self.updateWaveform(amplitude: amplitude)
-            }
-            amplitudeTracker.start()
+            print("Microphone node active: \(microphone != nil)")
 
-            // Start audio engine
+            // Setup the signal chain
+            bandPassFilter = BandPassFilter(microphone)
+            bandPassFilter.centerFrequency = 70
+            bandPassFilter.bandwidth = 40
+
+            dynamicsProcessor = DynamicsProcessor(bandPassFilter)
+            dynamicsProcessor.threshold = -30
+            dynamicsProcessor.headRoom = 5.0
+            dynamicsProcessor.attackTime = 0.01
+            dynamicsProcessor.releaseTime = 0.2
+
+            // Attach amplitude tap AFTER the node is properly connected to the engine
+            mixer = Mixer(dynamicsProcessor)
+            audioEngine.output = mixer
+
+            // Now add amplitude tap
+            amplitudeTap = AmplitudeTap(dynamicsProcessor) { amplitude in
+                DispatchQueue.main.async {
+                    print("Debug - Amplitude value: \(amplitude)")
+                    self.handleAmplitude(amplitude)
+                }
+            }
+            amplitudeTap.start() // Start tap only after attaching
+
+            // Start the audio engine
             try audioEngine.start()
-
-            // Start visualization update timer
-            timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
-                self.updateWaveform()
-            }
+            isEngineRunning = true
+            print("Listening to heart sounds with output and amplitude tracking...")
         } catch {
-            print("Failed to start AudioKit: \(error)")
+            print("Failed to start AudioKit: \(error.localizedDescription)")
+            isEngineRunning = false
         }
     }
 
-    func updateWaveform(amplitude: Float = 0.0) {
-        // Generate waveform path
-        let path = UIBezierPath()
-        let midY = waveformLayer.bounds.midY
-        let width = waveformLayer.bounds.width
-        let height = waveformLayer.bounds.height
-        let amplitudeScale = CGFloat(amplitude) * height
-
-        for x in stride(from: 0, to: width, by: 1) {
-            let normalizedX = x / width
-            let y = midY + amplitudeScale * sin(normalizedX * 2 * .pi)
-            if x == 0 {
-                path.move(to: CGPoint(x: x, y: y))
-            } else {
-                path.addLine(to: CGPoint(x: x, y: y))
-            }
-        }
-
-        // Update layer path
-        waveformLayer.path = path.cgPath
+    
+    func handleAmplitude(_ amplitude: AUValue) {
+        print("Amplitude: \(amplitude)")
     }
 
     @IBAction func stopTapped(_ sender: UIButton) {
@@ -115,9 +127,19 @@ class ViewController: UIViewController {
     }
 
     func stopListening() {
+        guard isEngineRunning else {
+            print("Audio engine is not running.")
+            return
+        }
+
+        // Stop the amplitude tap if it exists
+        if let tap = amplitudeTap {
+            tap.stop()
+            amplitudeTap = nil // Set to nil to avoid stopping it again
+        }
+
         audioEngine.stop()
-        amplitudeTracker.stop()
-        timer.invalidate()
-        waveformLayer.path = nil
+        isEngineRunning = false
+        print("Stopped listening.")
     }
 }
