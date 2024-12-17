@@ -28,12 +28,13 @@ class ViewController: UIViewController {
         let audioSession = AVAudioSession.sharedInstance()
         do {
             try audioSession.setCategory(.playAndRecord, options: [.defaultToSpeaker, .allowBluetooth])
-            try audioSession.setMode(.default)
+            try audioSession.overrideOutputAudioPort(.speaker) // Ensure speaker output
             try audioSession.setActive(true)
-            print("Audio session configured successfully.")
+            print("Audio session configured for speaker output.")
         } catch {
-            print("Failed to configure audio session: \(error.localizedDescription)")
+            print("Failed to configure audio session for speaker: \(error.localizedDescription)")
         }
+
     }
 
     func requestMicrophonePermission() {
@@ -83,29 +84,46 @@ class ViewController: UIViewController {
 
             print("Microphone node active: \(microphone != nil)")
 
-            // Setup the signal chain
-            bandPassFilter = BandPassFilter(microphone)
-            bandPassFilter.centerFrequency = 70
-            bandPassFilter.bandwidth = 40
+            // High-pass filter to remove low-frequency noise
+            let highPassFilter = HighPassFilter(microphone)
+            highPassFilter.cutoffFrequency = 20  // Remove low-frequency noise
 
-            dynamicsProcessor = DynamicsProcessor(bandPassFilter)
-            dynamicsProcessor.threshold = -30
-            dynamicsProcessor.headRoom = 5.0
-            dynamicsProcessor.attackTime = 0.01
-            dynamicsProcessor.releaseTime = 0.2
+            // Band-pass filter to isolate heartbeat frequencies
+            bandPassFilter = BandPassFilter(highPassFilter)
+            bandPassFilter.centerFrequency = 80
+            bandPassFilter.bandwidth = 50
 
-            // Attach amplitude tap AFTER the node is properly connected to the engine
+            // Low-pass filter to remove higher frequencies
+            let lowPassFilter = LowPassFilter(bandPassFilter)
+            lowPassFilter.cutoffFrequency = 150
+
+            // Dynamics processor to enhance the signal
+            dynamicsProcessor = DynamicsProcessor(lowPassFilter)
+            dynamicsProcessor.threshold = -15
+            dynamicsProcessor.headRoom = 10.0
+            dynamicsProcessor.attackTime = 0.05
+            dynamicsProcessor.releaseTime = 0.3
+            
             mixer = Mixer(dynamicsProcessor)
             audioEngine.output = mixer
 
-            // Now add amplitude tap
+            // Set up the mixer and output the processed sound
+//            mixer = Mixer(dynamicsProcessor)
+            mixer.volume = 3.0  // Amplify output
+//            audioEngine.output = mixer  // Route the processed signal to the speaker
+
+
+            // Attach amplitude tap for real-time visualization
             amplitudeTap = AmplitudeTap(dynamicsProcessor) { amplitude in
                 DispatchQueue.main.async {
                     print("Debug - Amplitude value: \(amplitude)")
                     self.handleAmplitude(amplitude)
                 }
             }
-            amplitudeTap.start() // Start tap only after attaching
+            amplitudeTap.start()
+
+            // Ensure audio is routed to the speaker
+            try AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
 
             // Start the audio engine
             try audioEngine.start()
@@ -116,6 +134,8 @@ class ViewController: UIViewController {
             isEngineRunning = false
         }
     }
+
+
 
     
     func handleAmplitude(_ amplitude: AUValue) {
