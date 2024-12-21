@@ -15,33 +15,18 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <stackView opaque="NO" contentMode="scaleToFill" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="xSh-zK-6mp">
-                                <rect key="frame" x="71" y="342.66666666666669" width="251.33333333333337" height="166.66666666666669"/>
-                                <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="i" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iN3-fl-Hza">
-                                        <rect key="frame" x="0.0" y="53.333333333333314" width="11.333333333333334" height="60"/>
-                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="50"/>
-                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="iStethoscopeProLogo" translatesAutoresizingMaskIntoConstraints="NO" id="Jto-Zl-yBJ">
-                                        <rect key="frame" x="11.333333333333329" y="0.0" width="166.66666666666669" height="166.66666666666666"/>
-                                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                                    </imageView>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pro" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QEf-6U-kHN">
-                                        <rect key="frame" x="178" y="53.333333333333314" width="73.333333333333314" height="60"/>
-                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="50"/>
-                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                </subviews>
-                            </stackView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="iStethoscope Pro" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="roh-Hn-802">
+                                <rect key="frame" x="54.666666666666657" y="405.66666666666669" width="284" height="41"/>
+                                <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="34"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                         <constraints>
-                            <constraint firstItem="xSh-zK-6mp" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="8cq-41-fzI"/>
-                            <constraint firstItem="xSh-zK-6mp" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="AVK-iF-VFY"/>
+                            <constraint firstItem="roh-Hn-802" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="Yqb-2p-5Zs"/>
+                            <constraint firstItem="roh-Hn-802" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="x5L-Ni-EC2"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -50,7 +35,4 @@
             <point key="canvasLocation" x="52.671755725190835" y="374.64788732394368"/>
         </scene>
     </scenes>
-    <resources>
-        <image name="iStethoscopeProLogo" width="166.66667175292969" height="166.66667175292969"/>
-    </resources>
 </document>

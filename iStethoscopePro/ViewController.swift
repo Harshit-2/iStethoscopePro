@@ -153,10 +153,11 @@ class ViewController: UIViewController {
     }
     
     func animateButton (_ button: UIButton) {
-        // Simple click animation
-        button.alpha = 0.5  // Button becomes partially transparent when tapped
-        UIView.animate(withDuration: 0.1, animations: {
-            button.alpha = 1.0  // Fade back to full opacity
-        })
+        DispatchQueue.main.async {
+            button.alpha = 0.5
+            UIView.animate(withDuration: 0.1, animations: {
+                button.alpha = 1.0
+            })
+        }
     }
 }
