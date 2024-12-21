@@ -19,8 +19,15 @@
                                 <rect key="frame" x="16" y="223" width="408" height="510"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="DisplayImage" translatesAutoresizingMaskIntoConstraints="NO" id="79X-rO-sNo">
-                                        <rect key="frame" x="50.666666666666657" y="0.0" width="306.66666666666674" height="416"/>
+                                        <rect key="frame" x="50.666666666666657" y="0.0" width="306.66666666666674" height="266"/>
                                     </imageView>
+                                    <view tag="13" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bAc-EX-prE" customClass="WaveformView" customModule="iStethoscopePro" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="316" width="408" height="100"/>
+                                        <color key="backgroundColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="100" id="ZKj-5d-tm3"/>
+                                        </constraints>
+                                    </view>
                                     <stackView opaque="NO" contentMode="scaleToFill" alignment="top" spacing="70" translatesAutoresizingMaskIntoConstraints="NO" id="xIA-xP-SXz">
                                         <rect key="frame" x="77.666666666666671" y="466" width="252.66666666666663" height="44"/>
                                         <subviews>
@@ -58,6 +65,12 @@
                                     </stackView>
                                 </subviews>
                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="trailing" secondItem="bAc-EX-prE" secondAttribute="trailing" id="XAv-HX-NnT"/>
+                                    <constraint firstItem="bAc-EX-prE" firstAttribute="leading" secondItem="AS8-bN-o3r" secondAttribute="leading" id="kf0-xI-7YX"/>
+                                    <constraint firstAttribute="trailing" secondItem="bAc-EX-prE" secondAttribute="trailing" id="ncq-y9-GSF"/>
+                                    <constraint firstItem="bAc-EX-prE" firstAttribute="leading" secondItem="AS8-bN-o3r" secondAttribute="leading" id="yB0-e5-44I"/>
+                                </constraints>
                             </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
@@ -66,8 +79,12 @@
                             <constraint firstItem="AS8-bN-o3r" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="3hg-Ed-Pq8"/>
                             <constraint firstItem="AS8-bN-o3r" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="16" id="9Am-hB-iRh"/>
                             <constraint firstAttribute="trailing" secondItem="AS8-bN-o3r" secondAttribute="trailing" constant="16" id="Ipd-Sg-yKi"/>
+                            <constraint firstItem="AS8-bN-o3r" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="161" id="fad-Hc-xsh"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="waveformView" destination="bAc-EX-prE" id="JWN-Dv-6Pk"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>

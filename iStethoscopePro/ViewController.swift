@@ -3,24 +3,27 @@ import AudioKit
 import AVFoundation
 
 class ViewController: UIViewController {
+    
+    @IBOutlet weak var waveformView: WaveformView!
+    
     var audioEngine: AudioEngine!
     var microphone: AudioEngine.InputNode!
     var mixer: Mixer!
     var bandPassFilter: BandPassFilter!
     var amplitudeTap: AmplitudeTap!
     var isListening = false
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupAudioEngine()
         configureAudioSession()
         requestMicrophonePermission()
     }
-
+    
     func setupAudioEngine() {
         audioEngine = AudioEngine()
     }
-
+    
     func configureAudioSession() {
         let audioSession = AVAudioSession.sharedInstance()
         do {
@@ -32,7 +35,7 @@ class ViewController: UIViewController {
             print("Failed to configure audio session: \(error.localizedDescription)")
         }
     }
-
+    
     func requestMicrophonePermission() {
         AVAudioSession.sharedInstance().requestRecordPermission { granted in
             DispatchQueue.main.async {
@@ -44,7 +47,7 @@ class ViewController: UIViewController {
             }
         }
     }
-
+    
     func showMicrophonePermissionAlert() {
         let alert = UIAlertController(
             title: "Microphone Access Needed",
@@ -54,17 +57,18 @@ class ViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
-
+    
     @IBAction func listenTapped(_ sender: UIButton) {
+        animateButton(sender)
         startStethoscope()
     }
-
+    
     func startStethoscope() {
         guard !isListening else {
             print("Stethoscope already active")
             return
         }
-
+        
         // Reset audio engine and components
         audioEngine = AudioEngine()
         
@@ -75,54 +79,58 @@ class ViewController: UIViewController {
             try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .mixWithOthers, .interruptSpokenAudioAndMixWithOthers])
             try audioSession.overrideOutputAudioPort(.speaker)
             try audioSession.setActive(true)
-
+            
             // Ensure microphone input
             guard let input = audioEngine.input else {
                 print("Microphone not available")
                 return
             }
             microphone = input
-
+            
             // Reinitialize bandpass filter
             bandPassFilter = BandPassFilter(microphone)
             bandPassFilter.centerFrequency = 80
             bandPassFilter.bandwidth = 50
-
+            
             // Reinitialize mixer
             mixer = Mixer(bandPassFilter)
             mixer.volume = 2.0
             audioEngine.output = mixer
-
+            
             // Reinitialize amplitude tap
             amplitudeTap = AmplitudeTap(bandPassFilter) { amplitude in
                 DispatchQueue.main.async {
                     let decibelLevel = 20 * log10(max(amplitude, 0.0001))
                     print("Heartbeat Sound Level: \(decibelLevel) dB")
+                    
+                    // Update waveform with new amplitude
+                    self.waveformView.update(withAmplitude: amplitude)
                 }
             }
             amplitudeTap.start()
-
+            
             // Start audio engine
             try audioEngine.start()
             isListening = true
             print("Stethoscope activated - listening and outputting sound")
-
+            
         } catch {
             print("Failed to start stethoscope: \(error.localizedDescription)")
             isListening = false
         }
     }
-
+    
     @IBAction func stopTapped(_ sender: UIButton) {
+        animateButton(sender)
         stopStethoscope()
     }
-
+    
     func stopStethoscope() {
         guard isListening else {
             print("Stethoscope already stopped")
             return
         }
-
+        
         // Clean up and stop components
         amplitudeTap?.stop()
         audioEngine.stop()
@@ -142,5 +150,13 @@ class ViewController: UIViewController {
         
         isListening = false
         print("Stethoscope deactivated")
+    }
+    
+    func animateButton (_ button: UIButton) {
+        // Simple click animation
+        button.alpha = 0.5  // Button becomes partially transparent when tapped
+        UIView.animate(withDuration: 0.1, animations: {
+            button.alpha = 1.0  // Fade back to full opacity
+        })
     }
 }
